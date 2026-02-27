@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: transparent;
+      font-family: 'Noto Sans KR', sans-serif;
+      overflow: hidden;
+    }
+
+    #wrap {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+      height: 40px;
+    }
+
+    #addr-input {
+      flex: 1;
+      padding: 8px 12px;
+      background: #080c1a;
+      border: 1px solid #141d40;
+      border-radius: 9px;
+      color: #c5c8d8;
+      font-size: 14px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    #addr-input:hover,
+    #addr-input:focus {
+      border-color: #b8922a;
+      box-shadow: 0 0 0 2px rgba(184, 146, 42, .12);
+    }
+
+    #addr-input::placeholder {
+      color: #4a5070;
+    }
+
+    #search-btn {
+      padding: 8px 14px;
+      background: #b8922a;
+      color: #05080f;
+      border: none;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s, transform .15s;
+    }
+
+    #search-btn:hover {
+      background: #c9a23a;
+    }
+
+    /* Postcode Embed 레이어 */
+    #layer {
+      display: none;
+      position: relative;
+      width: 100%;
+      height: 400px;
+      margin-top: 8px;
+      border: 2px solid #b8922a;
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+      z-index: 9999;
+    }
+
+    #close-btn {
+      cursor: pointer;
+      position: absolute;
+      right: 4px;
+      top: 4px;
+      z-index: 10000;
+      border: none;
+      background: #333;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="wrap">
+    <input id="addr-input" type="text" placeholder="🔍 클릭하거나 검색 버튼을 눌러 주소를 입력하세요" readonly />
+    <button id="search-btn" onclick="openPostcode()">주소 검색</button>
+  </div>
+  <div id="layer">
+    <button id="close-btn" onclick="closePostcode()">닫기</button>
+  </div>
+
+  <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <script>
+    function sendToStreamlit(type, data) {
+      window.parent.postMessage(Object.assign({ type }, data), '*');
+    }
+    function setComponentValue(value) {
+      sendToStreamlit('streamlit:setComponentValue', { value });
+    }
+    function setFrameHeight(h) {
+      sendToStreamlit('streamlit:setFrameHeight', { height: h });
+    }
+
+    sendToStreamlit('streamlit:componentReady', { apiVersion: 1 });
+
+    window.addEventListener('message', function (e) {
+      if (e.data.type === 'streamlit:render') {
+        var args = e.data.args || {};
+        if (args.value) {
+          document.getElementById('addr-input').value = args.value;
+        }
+        // 기본 렌더링 시 높이는 45px
+        if (document.getElementById('layer').style.display !== 'block') {
+          setFrameHeight(45);
+        }
+      }
+    });
+
+    var element_layer = document.getElementById('layer');
+
+    function closePostcode() {
+      element_layer.style.display = 'none';
+      setFrameHeight(45);
+    }
+
+    function openPostcode() {
+      // 레이어 표시 및 Streamlit 프레임 높이 460으로 늘림 (입력창 45 + 여백 + 레이어 400)
+      element_layer.style.display = 'block';
+      setFrameHeight(460);
+
+      new daum.Postcode({
+        oncomplete: function (data) {
+          var addr = data.roadAddress || data.jibunAddress || data.address;
+          document.getElementById('addr-input').value = addr;
+          setComponentValue(addr);
+
+          // 완료 후 레이어 숨기고 다시 축소
+          closePostcode();
+        },
+        width: '100%',
+        height: '100%',
+        maxSuggestItems: 5
+      }).embed(element_layer);
+    }
+
+    document.getElementById('addr-input').addEventListener('click', openPostcode);
+  </script>
+</body>
+
+</html>
