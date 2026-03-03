@@ -39,44 +39,90 @@ st.set_page_config(
     layout="centered"
 )
 
-# ─── 커스텀 CSS (네이비 + 머스타드 옐로우) ─────────────────────
+# ─── 커스텀 CSS (다크 / 라이트 모드 자동 대응) ──────────────────
 st.markdown("""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap');
-  html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; background-color: #05080f !important; color: #c5c8d8 !important; }
-  .stApp { background-color: #05080f !important; }
+
+  /* ── 색상 토큰: 다크 모드 (기본) ── */
+  :root {
+    --bg:       #05080f;
+    --surface:  #090d1e;
+    --surface2: #0e1535;
+    --border:   #141d40;
+    --text:     #c5c8d8;
+    --subtext:  #4a5070;
+    --accent:   #b8922a;
+    --accent-h: #c9a23a;
+    --input-bg: #080c1a;
+    --sn-fg:    #05080f;
+    --a04: rgba(184,146,42,.04);
+    --a08: rgba(184,146,42,.08);
+    --a10: rgba(184,146,42,.10);
+    --a12: rgba(184,146,42,.12);
+    --a30: rgba(184,146,42,.30);
+    --a35: rgba(184,146,42,.35);
+    --a40: rgba(184,146,42,.40);
+  }
+
+  /* ── 색상 토큰: 라이트 모드 ── */
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg:       #f5f7ff;
+      --surface:  #ffffff;
+      --surface2: #eef1fb;
+      --border:   #d8dced;
+      --text:     #1a1d2e;
+      --subtext:  #6b7194;
+      --accent:   #7a5c10;
+      --accent-h: #8e6c14;
+      --input-bg: #f8f9fd;
+      --sn-fg:    #ffffff;
+      --a04: rgba(122,92,16,.04);
+      --a08: rgba(122,92,16,.08);
+      --a10: rgba(122,92,16,.10);
+      --a12: rgba(122,92,16,.12);
+      --a30: rgba(122,92,16,.30);
+      --a35: rgba(122,92,16,.35);
+      --a40: rgba(122,92,16,.40);
+    }
+  }
+
   /* 기본 메뉴, 헤더, 푸터 숨기기 */
   #MainMenu {visibility: hidden;}
   header {visibility: hidden;}
   footer {visibility: hidden;}
+
+  html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; background-color: var(--bg) !important; color: var(--text) !important; }
+  .stApp { background-color: var(--bg) !important; }
   .block-container { padding-top: 2rem !important; max-width: 780px !important; }
   .page-title { font-size: 2.2rem; font-weight: 900; line-height: 1.15; letter-spacing: -.03em; margin-bottom: .4rem; }
-  .page-title em { font-style: normal; color: #b8922a; }
-  .page-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(184,146,42,.10); border: 1px solid rgba(184,146,42,.35); color: #b8922a; font-family: 'IBM Plex Mono', monospace; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; padding: 5px 14px; border-radius: 20px; margin-bottom: 14px; }
-  .page-sub { color: #4a5070; font-size: .9rem; margin-bottom: 2rem; }
-  .section-label { display: flex; align-items: center; gap: 10px; margin: 1.8rem 0 .9rem; font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: #4a5070; }
-  .section-label .sn { width: 28px; height: 28px; background: #b8922a; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; color: #05080f; }
-  [data-testid="stFileUploader"] { background: #090d1e !important; border: 2px dashed #141d40 !important; border-radius: 14px !important; padding: 1rem !important; }
-  [data-testid="stFileUploader"]:hover { border-color: #b8922a !important; }
-  [data-testid="stDataFrame"] { border-radius: 12px; overflow: hidden; border: 1px solid #141d40; }
-  thead tr th { background: #0e1535 !important; color: #b8922a !important; font-family: 'IBM Plex Mono', monospace !important; font-size: .72rem !important; letter-spacing: .1em !important; text-transform: uppercase !important; }
-  tbody tr:hover td { background: rgba(184,146,42,.04) !important; }
-  [data-testid="stForm"] { background: #090d1e !important; border: 1px solid #141d40 !important; border-radius: 16px !important; padding: 1.6rem !important; }
-  input, textarea, select, [data-baseweb="select"] div { background: #080c1a !important; border-color: #141d40 !important; color: #c5c8d8 !important; border-radius: 9px !important; font-family: 'Noto Sans KR', sans-serif !important; }
-  input:focus, select:focus { border-color: #b8922a !important; box-shadow: 0 0 0 2px rgba(184,146,42,.12) !important; }
-  label { color: #b8922a !important; font-family: 'IBM Plex Mono', monospace !important; font-size: .72rem !important; letter-spacing: .08em !important; text-transform: uppercase !important; }
-  [data-testid="stFormSubmitButton"] button, .stButton button { background: #b8922a !important; color: #05080f !important; border: none !important; border-radius: 10px !important; font-weight: 900 !important; font-size: 1rem !important; padding: .85rem 2rem !important; width: 100% !important; transition: all .2s !important; }
-  [data-testid="stFormSubmitButton"] button:hover { background: #c9a23a !important; transform: translateY(-2px) !important; }
-  [data-testid="stDownloadButton"] button { background: #0e1535 !important; color: #b8922a !important; border: 1.5px solid rgba(184,146,42,.4) !important; border-radius: 10px !important; font-weight: 700 !important; width: 100% !important; }
-  [data-testid="stDownloadButton"] button:hover { background: rgba(184,146,42,.10) !important; }
+  .page-title em { font-style: normal; color: var(--accent); }
+  .page-tag { display: inline-flex; align-items: center; gap: 8px; background: var(--a10); border: 1px solid var(--a35); color: var(--accent); font-family: 'IBM Plex Mono', monospace; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; padding: 5px 14px; border-radius: 20px; margin-bottom: 14px; }
+  .page-sub { color: var(--subtext); font-size: .9rem; margin-bottom: 2rem; }
+  .section-label { display: flex; align-items: center; gap: 10px; margin: 1.8rem 0 .9rem; font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--subtext); }
+  .section-label .sn { width: 28px; height: 28px; background: var(--accent); border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; color: var(--sn-fg); }
+  [data-testid="stFileUploader"] { background: var(--surface) !important; border: 2px dashed var(--border) !important; border-radius: 14px !important; padding: 1rem !important; }
+  [data-testid="stFileUploader"]:hover { border-color: var(--accent) !important; }
+  [data-testid="stDataFrame"] { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+  thead tr th { background: var(--surface2) !important; color: var(--accent) !important; font-family: 'IBM Plex Mono', monospace !important; font-size: .72rem !important; letter-spacing: .1em !important; text-transform: uppercase !important; }
+  tbody tr:hover td { background: var(--a04) !important; }
+  [data-testid="stForm"] { background: var(--surface) !important; border: 1px solid var(--border) !important; border-radius: 16px !important; padding: 1.6rem !important; }
+  input, textarea, select, [data-baseweb="select"] div { background: var(--input-bg) !important; border-color: var(--border) !important; color: var(--text) !important; border-radius: 9px !important; font-family: 'Noto Sans KR', sans-serif !important; }
+  input:focus, select:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--a12) !important; }
+  label { color: var(--accent) !important; font-family: 'IBM Plex Mono', monospace !important; font-size: .72rem !important; letter-spacing: .08em !important; text-transform: uppercase !important; }
+  [data-testid="stFormSubmitButton"] button, .stButton button { background: var(--accent) !important; color: var(--sn-fg) !important; border: none !important; border-radius: 10px !important; font-weight: 900 !important; font-size: 1rem !important; padding: .85rem 2rem !important; width: 100% !important; transition: all .2s !important; }
+  [data-testid="stFormSubmitButton"] button:hover { background: var(--accent-h) !important; transform: translateY(-2px) !important; }
+  [data-testid="stDownloadButton"] button { background: var(--surface2) !important; color: var(--accent) !important; border: 1.5px solid var(--a40) !important; border-radius: 10px !important; font-weight: 700 !important; width: 100% !important; }
+  [data-testid="stDownloadButton"] button:hover { background: var(--a10) !important; }
   [data-testid="stSuccess"] { background: rgba(0,168,120,.08) !important; border: 1.5px solid rgba(0,168,120,.3) !important; border-radius: 10px !important; color: #00a878 !important; }
   [data-testid="stError"]   { background: rgba(255,80,80,.08) !important; border: 1.5px solid rgba(255,80,80,.3) !important; border-radius: 10px !important; }
-  [data-testid="stWarning"] { background: rgba(184,146,42,.08) !important; border: 1.5px solid rgba(184,146,42,.3) !important; border-radius: 10px !important; color: #b8922a !important; }
-  hr { border-color: #141d40 !important; }
-  [data-baseweb="select"] { background: #080c1a !important; border-radius: 9px !important; }
-  [data-baseweb="popover"] { background: #0e1535 !important; border: 1px solid #141d40 !important; }
-  .stSpinner > div { border-top-color: #b8922a !important; }
-  details { background: #090d1e !important; border: 1px solid #141d40 !important; border-radius: 10px !important; }
+  [data-testid="stWarning"] { background: var(--a08) !important; border: 1.5px solid var(--a30) !important; border-radius: 10px !important; color: var(--accent) !important; }
+  hr { border-color: var(--border) !important; }
+  [data-baseweb="select"] { background: var(--input-bg) !important; border-radius: 9px !important; }
+  [data-baseweb="popover"] { background: var(--surface2) !important; border: 1px solid var(--border) !important; }
+  .stSpinner > div { border-top-color: var(--accent) !important; }
+  details { background: var(--surface) !important; border: 1px solid var(--border) !important; border-radius: 10px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -290,8 +336,8 @@ if submitted:
 
 st.markdown("---")
 st.markdown(
-    "<center style='color:#4a5070; font-size:.75rem; font-family:monospace;'>"
-    "Ansys License Certificate Generator · Navy × Yellow Edition"
+    "<center style='color:var(--subtext); font-size:.75rem; font-family:monospace;'>"
+    "Ansys License Certificate Generator · Dark &amp; Light Edition"
     "</center>",
     unsafe_allow_html=True
 )
