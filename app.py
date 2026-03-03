@@ -95,7 +95,7 @@ st.markdown("""
 
   html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; background-color: var(--bg) !important; color: var(--text) !important; }
   .stApp { background-color: var(--bg) !important; }
-  .block-container { padding-top: 2rem !important; max-width: 780px !important; }
+  .block-container { padding-top: 3.5rem !important; max-width: 780px !important; }
   .page-title { font-size: 2.2rem; font-weight: 900; line-height: 1.15; letter-spacing: -.03em; margin-bottom: .4rem; }
   .page-title em { font-style: normal; color: var(--accent); }
   .page-tag { display: inline-flex; align-items: center; gap: 8px; background: var(--a10); border: 1px solid var(--a35); color: var(--accent); font-family: 'IBM Plex Mono', monospace; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; padding: 5px 14px; border-radius: 20px; margin-bottom: 14px; }
