@@ -20,9 +20,10 @@ def parse_license_text(content: str):
 @st.cache_data
 def load_template_bytes():
     """PPTX 템플릿 로드를 캐싱하여 매 버튼 클릭 시 발생하던 디스크 I/O 최적화"""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
     template_candidates = [
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "라이선스_확인서_템플릿.pptx"),
-        "라이선스_확인서_템플릿.pptx",
+        os.path.join(base_dir, "templates", "라이선스_확인서_템플릿.pptx"),
+        os.path.join(base_dir, "라이선스_확인서_템플릿.pptx"),  # fallback
     ]
     for tp in template_candidates:
         if os.path.exists(tp):
