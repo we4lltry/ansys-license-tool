@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import re
 import os
 import io
@@ -46,6 +45,10 @@ st.markdown("""
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap');
   html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; background-color: #05080f !important; color: #c5c8d8 !important; }
   .stApp { background-color: #05080f !important; }
+  /* 기본 메뉴, 헤더, 푸터 숨기기 */
+  #MainMenu {visibility: hidden;}
+  header {visibility: hidden;}
+  footer {visibility: hidden;}
   .block-container { padding-top: 2rem !important; max-width: 780px !important; }
   .page-title { font-size: 2.2rem; font-weight: 900; line-height: 1.15; letter-spacing: -.03em; margin-bottom: .4rem; }
   .page-title em { font-style: normal; color: #b8922a; }
@@ -97,8 +100,15 @@ st.markdown('<div class="section-label"><span class="sn">02</span> 추출된 라
 extracted_customer_no = None
 extracted_warranty_end = None
 
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
 if uploaded_file:
-    content = uploaded_file.getvalue().decode("utf-8", errors="ignore")
+    raw_bytes = uploaded_file.getvalue()
+    if len(raw_bytes) > MAX_FILE_SIZE:
+        st.error("❌ 파일 크기가 너무 큽니다. 5 MB 이하 파일만 허용됩니다.")
+        uploaded_file = None
+if uploaded_file:
+    content = raw_bytes.decode("utf-8", errors="ignore")
     matches = parse_license_text(content)
     if matches:
         df_licenses = pd.DataFrame(matches, columns=["No", "Software (제품명)", "QTY (수량)", "ExpireDate", "CustomerNo"])
@@ -124,7 +134,6 @@ with st.form("cert_form"):
     with col1:
         customer_name    = st.text_input("고 객 명",    placeholder="예) 한국 컴퍼니")
         customer_number  = st.text_input("고 객 번 호", value=extracted_customer_no or "", placeholder="예) 1213401")
-        license_type     = st.selectbox("라이선스 유형", ["Commercial", "Academic"])
     with col2:
         install_location = st.text_input("설 치 장 소",    placeholder="예) 서울시 강남구 테헤란로 123")
         warranty_start   = st.date_input("라이선스 보증기간 시작", value=date.today())
@@ -242,7 +251,8 @@ if submitted:
         template_bytes = load_template_bytes()
 
         with st.spinner("확인서 생성 중..."):
-            fname_base = f"Ansys_라이선스확인서_{customer_name}_{issue_date.strftime('%Y%m%d')}"
+            safe_customer = re.sub(r'[\\/*?:"<>|]', '_', customer_name).strip()
+            fname_base = f"Ansys_라이선스확인서_{safe_customer}_{issue_date.strftime('%Y%m%d')}"
             warranty_period_formatted = (
                 f"{warranty_start.year}. {warranty_start.month:02d}. {warranty_start.day:02d}"
                 f" ~ {warranty_end.year}. {warranty_end.month:02d}. {warranty_end.day:02d}"
@@ -261,14 +271,13 @@ if submitted:
                         issue_date, df_licenses,
                         template_bytes
                     )
-                except Exception as e:
-                    pptx_err = str(e)
+                except Exception:
+                    pptx_err = "PPT 생성 중 오류가 발생했습니다. 템플릿 파일 형식을 확인해 주세요."
             else:
                 pptx_err = "템플릿 파일(라이선스_확인서_템플릿.pptx)이 앱 폴더에 없습니다."
 
-        st.success("✅ 확인서가 생성되었습니다! 아래 버튼으로 다운로드하세요.")
-        
         if pptx_buf:
+            st.success("✅ 확인서가 생성되었습니다! 아래 버튼으로 다운로드하세요.")
             st.download_button(
                 label="⬇️  PPT 템플릿 다운로드",
                 data=pptx_buf,
@@ -277,7 +286,7 @@ if submitted:
                 use_container_width=True,
             )
         else:
-            st.error(f"PPT 오류: {pptx_err}")
+            st.error(f"❌ PPT 오류: {pptx_err}")
 
 st.markdown("---")
 st.markdown(
