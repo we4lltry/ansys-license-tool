@@ -329,10 +329,15 @@ def generate_excel(bu_key: str, sheet_name: str, info: dict, items: list,
         final    = subtotal - disc_amt
         for r in range(cur, cur + 30):
             if "Total Amount" in str(ws.cell(r, 9).value or ""):
-                for rng in list(ws.merged_cells.ranges):
-                    if (rng.min_row <= r + 2 and rng.max_row >= r + 1
-                            and rng.max_col >= 9 and rng.min_col <= 11):
-                        ws.unmerge_cells(str(rng))
+                # r+1, r+2 행의 merged ranges + _cells MergedCell 객체 제거
+                ws.merged_cells.ranges = type(ws.merged_cells.ranges)(
+                    rng for rng in ws.merged_cells.ranges
+                    if not (rng.min_row <= r + 2 and rng.max_row >= r + 1
+                            and rng.max_col >= 9 and rng.min_col <= 11)
+                )
+                for key in [(row, col) for (row, col) in list(ws._cells)
+                            if row in (r + 1, r + 2) and isinstance(ws._cells[(row, col)], _MC)]:
+                    del ws._cells[key]
                 ws.cell(r + 1, 9).value  = "Special D/C :"
                 ws.cell(r + 1, 11).value = disc_amt
                 ws.cell(r + 2, 9).value  = "Revised Price :"
