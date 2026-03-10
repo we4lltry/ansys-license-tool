@@ -271,6 +271,16 @@ def generate_excel(bu_key: str, sheet_name: str, info: dict, items: list,
     ws.insert_rows(first_price_row, BLOCK)
     # footer는 이제 first_price_row + BLOCK 위치
 
+    # 새 블록 안에 걸친 병합 셀 전부 해제
+    # (openpyxl은 delete_rows 후에도 merged_cells 정보를 잔존시키는 버그가 있음)
+    # unmerge_cells()는 내부에서 이미 삭제된 셀을 재삭제하려다 KeyError를 발생시키므로
+    # merged_cells.ranges에서 직접 제거한다.
+    block_end = first_price_row + BLOCK - 1
+    ws.merged_cells.ranges = type(ws.merged_cells.ranges)(
+        rng for rng in ws.merged_cells.ranges
+        if not (rng.min_row <= block_end and rng.max_row >= first_price_row)
+    )
+
     # 삽입된 200행 높이 초기화 (auto)
     for r in range(first_price_row, first_price_row + BLOCK):
         ws.row_dimensions[r].height = None
