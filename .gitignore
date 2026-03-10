@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Environment
+.env
+.env.local
+
+# Data files (local only — not committed)
+*.xlsx
+*.xls
+*.pptx
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Claude Code local settings
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
