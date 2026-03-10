@@ -221,14 +221,23 @@ def generate_excel(bu_key: str, sheet_name: str, info: dict, items: list,
         rd.hidden = False          # collapse된 rows 47-56 unhide
     ws.sheet_format.outlineLevelRow = 0
 
+    def _write(row, col, val):
+        """병합 셀이면 master(좌상단)를 찾아서 기록한다."""
+        for rng in ws.merged_cells.ranges:
+            if (rng.min_row <= row <= rng.max_row
+                    and rng.min_col <= col <= rng.max_col):
+                ws.cell(rng.min_row, rng.min_col).value = val
+                return
+        ws.cell(row, col).value = val
+
     # ── 고객 정보 ──────────────────────────────────────────────
-    ws["B8"]  = info.get("customer", "") + " 貴中"
-    ws["D10"] = info.get("contact", "")
-    ws["D11"] = info.get("tel", "")
-    ws["K9"]  = info["issue_date"].strftime("%Y. %m. %d")
-    ws["K10"] = info.get("our_name", "")
-    ws["K11"] = info.get("our_tel", "")
-    ws["K12"] = info.get("our_email", "")
+    _write(8,  2, info.get("customer", "") + " 貴中")
+    _write(10, 4, info.get("contact", ""))
+    _write(11, 4, info.get("tel", ""))
+    _write(9,  11, info["issue_date"].strftime("%Y. %m. %d"))
+    _write(10, 11, info.get("our_name", ""))
+    _write(11, 11, info.get("our_tel", ""))
+    _write(12, 11, info.get("our_email", ""))
 
     # ── 첫 번째 product 행 탐색 ────────────────────────────────
     first_price_row = None
