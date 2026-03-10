@@ -245,7 +245,9 @@ if st.button("📊  견적서 엑셀 생성", use_container_width=True):
                     use_container_width=True,
                 )
             except Exception as e:
+                import traceback
                 st.error(f"생성 실패: {e}")
+                st.code(traceback.format_exc())
 
 st.markdown("---")
 st.markdown(

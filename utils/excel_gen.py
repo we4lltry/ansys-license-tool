@@ -271,15 +271,27 @@ def generate_excel(bu_key: str, sheet_name: str, info: dict, items: list,
     ws.insert_rows(first_price_row, BLOCK)
     # footer는 이제 first_price_row + BLOCK 위치
 
-    # 새 블록 안에 걸친 병합 셀 전부 해제
-    # (openpyxl은 delete_rows 후에도 merged_cells 정보를 잔존시키는 버그가 있음)
-    # unmerge_cells()는 내부에서 이미 삭제된 셀을 재삭제하려다 KeyError를 발생시키므로
-    # merged_cells.ranges에서 직접 제거한다.
+    # 새 블록 안의 MergedCell 잔재 완전 제거
+    # openpyxl의 delete_rows/insert_rows 는 두 가지 버그가 있음:
+    #   1) merged_cells.ranges 에서 삭제 구간 범위를 지우지 않음
+    #   2) ws._cells 에 남은 MergedCell 객체를 지우지 않음
+    # 두 가지를 모두 직접 제거해야 ws.cell().value = ... 쓰기가 가능하다.
+    from openpyxl.cell.cell import MergedCell as _MC
     block_end = first_price_row + BLOCK - 1
+
+    # ① merged_cells.ranges 에서 블록 구간 범위 제거
     ws.merged_cells.ranges = type(ws.merged_cells.ranges)(
         rng for rng in ws.merged_cells.ranges
         if not (rng.min_row <= block_end and rng.max_row >= first_price_row)
     )
+
+    # ② _cells 에 남아있는 MergedCell 객체 제거
+    ghost_keys = [
+        (r, c) for (r, c) in list(ws._cells)
+        if first_price_row <= r <= block_end and isinstance(ws._cells[(r, c)], _MC)
+    ]
+    for key in ghost_keys:
+        del ws._cells[key]
 
     # 삽입된 200행 높이 초기화 (auto)
     for r in range(first_price_row, first_price_row + BLOCK):
