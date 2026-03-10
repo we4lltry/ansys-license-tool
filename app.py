@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import re
 import os
 import io
@@ -88,7 +87,6 @@ if uploaded_file:
         df_display = df_licenses[["No", "Software (제품명)", "QTY (수량)"]]
         st.dataframe(df_display, use_container_width=True, hide_index=True)
         st.success(f"✅ 총 {len(df_licenses)}개 라이선스 항목이 감지되었습니다.")
-        df_licenses = df_display
     else:
         st.warning("⚠️ 파일에서 라이선스 패턴을 찾지 못했습니다.")
         with st.expander("파일 내용 미리보기"):
@@ -104,7 +102,6 @@ with st.form("cert_form"):
     with col1:
         customer_name    = st.text_input("고 객 명",    placeholder="예) 한국 컴퍼니")
         customer_number  = st.text_input("고 객 번 호", value=extracted_customer_no or "", placeholder="예) 1213401")
-        license_type     = st.selectbox("라이선스 유형", ["Commercial", "Academic"])
     with col2:
         install_location = st.text_input("설 치 장 소",    placeholder="예) 서울시 강남구 테헤란로 123")
         warranty_start   = st.date_input("라이선스 보증기간 시작", value=date.today())
@@ -175,22 +172,20 @@ def create_pptx_from_template(customer, customer_no, location, lic_type,
     cell_pt = 10 if n_items <= 7 else 9 if n_items <= 12 else 8
 
     from pptx.util import Pt as _Pt, Cm as _Cm
+    MAX_ROWS = 100
     max_data_h = _Cm(5.1)  # 테이블 전체 허용 최대 높이
 
     for shape in slide.shapes:
         if shape.has_table:
             tbl = shape.table
-            while len(tbl.rows) < len(items):
-                last_tr = tbl.rows[len(tbl.rows) - 1]._tr
+
+            # ① 미리 MAX_ROWS 행까지 확장
+            while len(tbl.rows) < MAX_ROWS:
+                last_tr = tbl.rows[-1]._tr
                 new_tr = deepcopy(last_tr)
                 tbl._tbl.append(new_tr)
-            
-            # 행 개수가 많아 오버플로우 발생 시 테이블 높이 압축
-            if len(tbl.rows) * _Cm(0.85) > max_data_h:
-                new_h = int(max_data_h / len(tbl.rows))
-                for i in range(len(tbl.rows)):
-                    tbl.rows[i].height = new_h
 
+            # ② 데이터 채우기
             for r_idx, (no, sw, qty) in enumerate(items):
                 row = tbl.rows[r_idx]
                 for c_idx, val in enumerate([no, sw, qty]):
@@ -202,6 +197,18 @@ def create_pptx_from_template(customer, customer_no, location, lic_type,
                         para.runs[0].font.size = _Pt(cell_pt)
                     else:
                         para.text = val
+
+            # ③ 사용하지 않는 행 삭제 (뒤에서부터)
+            for i in range(len(tbl.rows) - 1, len(items) - 1, -1):
+                tr = tbl.rows[i]._tr
+                tr.getparent().remove(tr)
+
+            # ④ 모든 행 높이 균등 설정 (오버플로우 시 max_data_h 기준, 아니면 0.85cm)
+            total_h = min(len(tbl.rows) * _Cm(0.85), max_data_h)
+            row_h = int(total_h / len(tbl.rows))
+            for i in range(len(tbl.rows)):
+                tbl.rows[i].height = row_h
+
             break
 
     # 슬라이드 1개만 남기기
@@ -258,9 +265,8 @@ if submitted:
             else:
                 pptx_err = "템플릿 파일(라이선스_확인서_템플릿.pptx)이 앱 폴더에 없습니다."
 
-        st.success("✅ 확인서가 생성되었습니다! 아래 버튼으로 다운로드하세요.")
-        
         if pptx_buf:
+            st.success("✅ 확인서가 생성되었습니다! 아래 버튼으로 다운로드하세요.")
             st.download_button(
                 label="⬇️  PPT 템플릿 다운로드",
                 data=pptx_buf,
